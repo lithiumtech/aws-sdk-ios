@@ -1287,14 +1287,17 @@ static AWSS3TransferUtility *_defaultS3TransferUtility = nil;
     }
     
     //Create a temporary file for this part.
-    NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingAtPath:fileName];
-    [fileHandle seekToFileOffset:(partNumber - 1) * AWSS3TransferUtilityMultiPartSize];
-    NSData *partData = [fileHandle readDataOfLength:dataLength];
-    NSString *partFile = [self.cacheDirectoryPath stringByAppendingPathComponent:[[NSUUID UUID] UUIDString]];
-    NSURL *tempURL = [NSURL fileURLWithPath:partFile];
-    [partData writeToURL:tempURL atomically:YES];
-    partData = nil;
-    [fileHandle closeFile];
+    NSString *partFile;
+    @autoreleasepool {
+        NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingAtPath:fileName];
+        [fileHandle seekToFileOffset:(partNumber - 1) * AWSS3TransferUtilityMultiPartSize];
+        NSData *partData = [fileHandle readDataOfLength:dataLength];
+        partFile = [self.cacheDirectoryPath stringByAppendingPathComponent:[[NSUUID UUID] UUIDString]];
+        NSURL *tempURL = [NSURL fileURLWithPath:partFile];
+        [partData writeToURL:tempURL atomically:YES];
+        partData = nil;
+        [fileHandle closeFile];
+    }
     return partFile;
 }
 
